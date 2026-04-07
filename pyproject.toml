@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phronedge"
-version = "1.0.0"
+version = "1.0.1"
 description = "Runtime AI Governance  - govern any AI agent tool call"
 readme = "README.md"
 license = {text = "MIT"}
@@ -22,7 +22,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://phronedge.com"
-Documentation = "https://docs.phronedge.com"
+Documentation = "https://phronedge.com"
 Repository = "https://github.com/phronedge/phronedge-python"
 
 [tool.setuptools.packages.find]

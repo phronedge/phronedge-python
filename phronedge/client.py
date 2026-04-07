@@ -21,7 +21,7 @@ import requests
 
 logger = logging.getLogger("phronedge")
 
-DEFAULT_GATEWAY = "https://api.phronedge.com/v1"
+DEFAULT_GATEWAY = "https://api.phronedge.com/api/v1"
 
 
 class GovernanceError(Exception):

@@ -11,7 +11,7 @@
 
 Every tool call checked. Every decision audited. Every regulation enforced.
 
-[Playground](https://phronedge.com/try) | [Documentation](https://docs.phronedge.com) | [Dashboard](https://phronedge.com/brain)
+[Playground](https://phronedge.com/try) | [Documentation](https://phronedge.com) | [Dashboard](https://phronedge.com/brain)
 
 </div>
 
@@ -87,7 +87,7 @@ One environment variable. Nothing else.
 PHRONEDGE_API_KEY=pe_live_xxxxxxxxx
 ```
 
-Get your API key at [phronedge.com/playground](https://phronedge.com/try).
+Get your API key at [phronedge.com/try](https://phronedge.com/try).
 
 ---
 
@@ -455,7 +455,7 @@ One SDK. One gateway. One audit chain. Any framework. Any cloud. Any agent.
 
 ## Try Before You Code
 
-Visit [phronedge.com/playground](https://phronedge.com/try) to see runtime governance in action. Pick an industry (insurance, healthcare, finance, technology). Paste your OpenAI or Gemini API key. Chat with a governed agent. Watch every checkpoint fire in real time. No signup required. 30 seconds.
+Visit [phronedge.com/try](https://phronedge.com/try) to see runtime governance in action. Pick an industry (insurance, healthcare, finance, technology). Paste your OpenAI or Gemini API key. Chat with a governed agent. Watch every checkpoint fire in real time. No signup required. 30 seconds.
 
 ---
 
