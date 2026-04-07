@@ -482,3 +482,11 @@ Built for the EU AI Act era.
 **[phronedge.com](https://phronedge.com)**
 
 </div>
+
+## Community
+
+- Discord: https://discord.gg/Af4kyFAZ
+- GitHub Discussions: https://github.com/phronedge/phronedge-python/discussions
+- Support: support@phronedge.com
+- Website: https://phronedge.com
+- Playground: https://phronedge.com/try
