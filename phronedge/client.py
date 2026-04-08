@@ -106,7 +106,7 @@ class PhronEdge:
 
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
-                return self._governed_call(name, func, args, kwargs)
+                return self._governed_call(name, func, args, kwargs, _action=action, _jurisdiction=jurisdiction, _mcp=mcp, _delegates=delegates)
 
             wrapper._phronedge_governed = True
             wrapper._phronedge_tool_name = name
