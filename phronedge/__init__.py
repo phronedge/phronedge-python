@@ -18,5 +18,5 @@ Works with any framework. One API key. Zero config.
 
 from phronedge.client import PhronEdge, GovernanceError, ToolBlocked, AgentTerminated
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __all__ = ["PhronEdge", "GovernanceError", "ToolBlocked", "AgentTerminated"]
