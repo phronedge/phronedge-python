@@ -490,3 +490,100 @@ Built for the EU AI Act era.
 - Support: support@phronedge.com
 - Website: https://phronedge.com
 - Playground: https://phronedge.com/try
+
+---
+
+## CLI
+
+Three commands. Terminal-native governance.
+
+```bash
+# Scan code for ungoverned tools
+phronedge scan agent.py
+
+  PhronEdge Scan: agent.py
+  ==================================================
+
+  [+] lookup_patient (as "lookup_patient")      line   12  governed
+  [+] search_claims (as "search_claims")        line   24  governed
+  [+] approve_payout (as "approve_payout")      line   36  governed
+  [x] delete_record                             line   48  NOT governed
+  [x] send_raw_email                            line   55  NOT governed
+
+  Total: 5 tools
+    Governed:   3
+    Ungoverned: 2
+```
+
+```bash
+# Verify connection and credential
+phronedge verify
+
+  [+] API key: pe_live_41******************81f9
+  [+] Gateway: https://api.phronedge.com/api/v1
+  [+] Credential valid
+      Agent: claims-investigator
+      Jurisdiction: DE
+      Tools: lookup_patient, search_claims, approve_payout
+```
+
+```bash
+# Export signed policy for OPA
+phronedge export rego -o policy.rego
+phronedge export yaml -o governance.yaml
+phronedge export json -o policy.json
+```
+
+Every rule in the exported Rego traces to a regulation from your signed credential. Nothing hardcoded.
+
+---
+
+## CI/CD Pipeline
+
+Block deploys with ungoverned tools. One line in your pipeline.
+
+**GitHub Actions:**
+
+```yaml
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install phronedge
+      - run: phronedge scan src/agents/*.py --strict
+      - run: phronedge verify
+        env:
+          PHRONEDGE_API_KEY: ${{ secrets.PHRONEDGE_API_KEY }}
+```
+
+**GitLab CI:**
+
+```yaml
+governance-gate:
+  script:
+    - pip install phronedge
+    - phronedge scan src/agents/*.py --strict
+    - phronedge verify
+```
+
+**Pre-commit hook:**
+
+```bash
+#!/bin/bash
+phronedge scan $(git diff --cached --name-only -- '*.py') --strict
+```
+
+`--strict` exits with code 1 if any tool is ungoverned. The deploy fails. The ungoverned code never reaches production.
+
+---
+
+## Documentation
+
+- [Quickstart](https://phronedge.com/docs) - Govern your first agent in 2 minutes
+- [SDK Reference](https://phronedge.com/docs/sdk) - Full Python API
+- [Framework Guides](https://phronedge.com/docs/frameworks) - 9 frameworks with multi-agent examples
+- [Multi-Agent Governance](https://phronedge.com/docs/multi-agent) - Delegation, sub-agents, chain governance
+- [CLI Reference](https://phronedge.com/docs/cli) - scan, verify, export
+- [REST API Reference](https://phronedge.com/docs/api) - Every endpoint
+- [Console Guide](https://phronedge.com/docs/console) - Observer, Audit Log, Policy Builder
