@@ -87,7 +87,7 @@ class PhronEdge:
         if not self.api_key:
             logger.warning("No PHRONEDGE_API_KEY set. Set it in your .env or pass api_key= to PhronEdge().")
 
-    def govern(self, tool_name=None):
+    def govern(self, tool_name=None, action='execute', jurisdiction=None, mcp=None, delegates=None):
         """
         Decorator  - wraps a function with constitutional governance.
 
@@ -113,7 +113,7 @@ class PhronEdge:
             return wrapper
         return decorator
 
-    def _governed_call(self, tool_name, func, args, kwargs):
+    def _governed_call(self, tool_name, func, args, kwargs, _action='execute', _jurisdiction=None, _mcp=None, _delegates=None):
         """Execute a governed tool call."""
         self._ensure_credential()
 
