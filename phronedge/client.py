@@ -66,7 +66,7 @@ class PhronEdge:
         result = lookup_claim("CLM-001")  # governed by PhronEdge
     """
 
-    def __init__(self, api_key=None, gateway_url=None, timeout=30, raise_on_block=False):
+    def __init__(self, api_key=None, gateway_url=None, timeout=30, raise_on_block=False, agent_id=None):
         self.api_key = api_key or os.getenv("PHRONEDGE_API_KEY", "")
         self.gateway_url = gateway_url or os.getenv("PHRONEDGE_GATEWAY_URL", "") or DEFAULT_GATEWAY
         self.timeout = timeout
@@ -82,7 +82,7 @@ class PhronEdge:
         # Credential cache
         self._credential = None
         self._credential_ts = 0
-        self._agent_id = None
+        self._agent_id = agent_id
 
         if not self.api_key:
             logger.warning("No PHRONEDGE_API_KEY set. Set it in your .env or pass api_key= to PhronEdge().")
@@ -125,7 +125,7 @@ class PhronEdge:
 
         # Call gateway
         try:
-            r = self._call_gateway(tool_name, arguments)
+            r = self._call_gateway(tool_name, arguments, action=_action, jurisdiction=_jurisdiction, mcp=_mcp, delegates=_delegates)
         except requests.ConnectionError:
             raise GovernanceError(f"PhronEdge gateway unreachable at {self.gateway_url}")
         except Exception as e:
@@ -160,12 +160,19 @@ class PhronEdge:
         else:
             raise GovernanceError(f"Gateway returned {r.status_code}")
 
-    def _call_gateway(self, tool_name, arguments):
-        """Send tool call to gateway."""
+    def _call_gateway(self, tool_name, arguments, action='execute', jurisdiction=None, mcp=None, delegates=None):
+        """Send tool call to gateway with v2 params."""
         cred_json = json.dumps(self._credential or {})
+        payload = {"arguments": arguments, "action": action}
+        if jurisdiction:
+            payload["jurisdiction"] = jurisdiction
+        if mcp:
+            payload["mcp"] = mcp
+        if delegates:
+            payload["delegates"] = delegates
         return self._session.post(
             f"{self.gateway_url}/gateway/proxy/{tool_name}",
-            json=arguments,
+            json=payload,
             headers={"X-Constitutional-Credential": cred_json},
             timeout=self.timeout,
         )
@@ -175,7 +182,8 @@ class PhronEdge:
         if self._credential and (time.time() - self._credential_ts) < 300:
             return
         try:
-            r = self._session.get(f"{self.gateway_url}/auth/credential", timeout=self.timeout)
+            params = {"agent_id": self._agent_id} if self._agent_id else {}
+            r = self._session.get(f"{self.gateway_url}/auth/credential", params=params, timeout=self.timeout)
             if r.status_code == 200:
                 data = r.json()
                 self._credential = data.get("credential", data)
