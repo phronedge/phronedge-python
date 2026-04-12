@@ -2,9 +2,9 @@
 PhronEdge CLI
 
 Usage:
-  phronedge scan <file>        Scan agent code for ungoverned tools
-  phronedge verify             Verify credential and gateway connection
-  phronedge export <format>    Export signed policy (rego, yaml, json)
+  phronedge scan <file>                    Scan agent code for ungoverned tools
+  phronedge verify [--agent <id>]          Verify credential and gateway connection
+  phronedge export <format> [--agent <id>] Export signed policy (rego, yaml, json)
 """
 
 import sys
@@ -28,12 +28,14 @@ def main():
     scan_parser.add_argument("--strict", action="store_true", help="Exit 1 if ungoverned tools found")
 
     # verify
-    sub.add_parser("verify", help="Verify credential and gateway connection")
+    verify_parser = sub.add_parser("verify", help="Verify credential and gateway connection")
+    verify_parser.add_argument("--agent", help="Agent ID to verify (default: first available)")
 
     # export
     export_parser = sub.add_parser("export", help="Export signed policy")
     export_parser.add_argument("format", choices=["rego", "yaml", "json"], help="Export format")
     export_parser.add_argument("-o", "--output", help="Output file path")
+    export_parser.add_argument("--agent", help="Agent ID to export (default: first available)")
 
     args = parser.parse_args()
 
@@ -198,6 +200,7 @@ def cmd_verify(args):
         r = requests.get(
             f"{gateway}/auth/credential",
             headers={"X-PhronEdge-Key": api_key},
+            params={"agent_id": args.agent} if args.agent else {},
             timeout=10,
         )
         if r.status_code == 200:
@@ -241,6 +244,7 @@ def cmd_export(args):
         r = requests.get(
             f"{gateway}/policy/export/{fmt}",
             headers={"X-PhronEdge-Key": api_key},
+            params={"agent_id": args.agent} if args.agent else {},
             timeout=15,
         )
 
