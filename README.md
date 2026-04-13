@@ -1,589 +1,91 @@
-<div align="center">
+# PhronEdge
 
-<img src="https://img.shields.io/pypi/v/phronedge?style=for-the-badge&color=2350f0" />
-<img src="https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge" />
-<img src="https://img.shields.io/badge/EU%20AI%20Act-Compliant-22c55e?style=for-the-badge" />
-<img src="https://img.shields.io/badge/GDPR-Enforced-22c55e?style=for-the-badge" />
-
-# phronedge
-
-**Runtime governance for AI agents.**
-
-Every tool call checked. Every decision audited. Every regulation enforced.
-
-[Playground](https://phronedge.com/try) | [Documentation](https://phronedge.com) | [Dashboard](https://phronedge.com/brain)
-
-</div>
-
----
-
-## The Problem
-
-AI agents take actions. Actions have consequences. Right now there is no governance layer between your agent and everything it can touch.
-
-Your agent can access data it was never authorized to see. Execute financial transactions without human approval. Leak sensitive information across jurisdictions. Be compromised through prompt injection. Have its credential tampered with at runtime.
-
-And you will not know until a regulator asks you to prove it did not happen.
-
-EU AI Act enforcement is live. GDPR fines reach 20M EUR or 4% of global revenue. The question is not whether your agent needs governance. The question is whether you can prove it has governance.
-
-**An agent is an untrusted entity. Treat it like one.**
-
----
-
-## The Solution
-
-PhronEdge intercepts every tool call before it executes. Seven checkpoints. Every time. No exceptions.
-
-```
-Your agent calls a tool
-        |
-        v
-CP1  Credential Validator    Is this agent who it claims to be? (ECDSA)
-        |
-CP2  PII / Injection Scan    Is there sensitive data or manipulation in the input?
-        |
-CP3  Jurisdiction Router     Is this action legally permitted? (196 countries)
-        |
-CP4  Behavioral Monitor      Is this agent behaving normally? (signed baseline)
-        |
-CP5  Data Classifier         What classification level is this data?
-        |
-CP6  Tool Permission         Is this tool in the agent's signed credential?
-        |
-CP7  Output Constraint       Is the response safe to return?
-        |
-        v
-ALLOWED: your function executes normally
-BLOCKED: reason + regulation citation returned, event anchored
-```
-
----
-
-## Install
+Constitutional AI governance for every agent, every tool, every call.
 
 ```bash
 pip install phronedge
 ```
 
-Works with every Python package manager:
+## What it does
 
-```bash
-pip install phronedge
-uv add phronedge
-poetry add phronedge
-pdm add phronedge
-pipenv install phronedge
-```
-
----
-
-## Setup
-
-One environment variable. Nothing else.
-
-```bash
-# .env
-PHRONEDGE_API_KEY=pe_live_xxxxxxxxx
-```
-
-Get your API key at [phronedge.com/try](https://phronedge.com/try).
-
----
-
-## Quick Start
+PhronEdge wraps your AI agent tool calls with 7 governance checkpoints. Under 50ms. Your data stays in your runtime. Works with any framework.
 
 ```python
 from phronedge import PhronEdge
 
-pe = PhronEdge()
+pe = PhronEdge(agent_id="fraud-analyst")
 
-@pe.govern("lookup_claim")
-def lookup_claim(claim_id: str) -> str:
-    return db.query(claim_id)
-
-result = lookup_claim("CLM-2026-001")
-```
-
-Three lines. Every call to `lookup_claim` now passes through 7 governance checkpoints. Your existing function does not change.
-
----
-
-## What Governance Looks Like
-
-Four scenarios. What your agent tries. What PhronEdge does.
-
-**Clean call:**
-
-```python
-result = lookup_claim("CLM-2026-001")
-# ALLOWED in 23ms
-# Claim data returned to agent
-# Audit: TOOL_CALL_ALLOWED, 7/7 checkpoints passed
-```
-
-**PII in input:**
-
-```python
-result = lookup_claim("SSN 123-45-6789")
-# BLOCKED
-# PII detected in function arguments (SSN pattern)
-# Session escalated to PII_RESTRICTED
-# Audit: PII_INPUT_DETECTED, GDPR Art. 9
-```
-
-**Tool not in credential:**
-
-```python
-result = access_medical_records("patient-123")
-# BLOCKED
-# medical_records not in agent's signed credential
-# Function never executed. Data never touched.
-# Audit: TOOL_CALL_BLOCKED, EU AI Act Art. 14
-```
-
-**Credential tampered at runtime:**
-
-```python
-# Attacker modifies credential at 2:00pm
-# Agent makes next call at 2:01pm
-result = lookup_claim("CLM-2026-001")
-# ECDSA signature mismatch detected
-# Vault restore runs automatically
-# Call proceeds with restored credential
-# You did nothing. PhronEdge fixed itself.
-# Audit: VAULT_TAMPER_DETECTED + VAULT_CREDENTIAL_RESTORED
-```
-
----
-
-## Framework Examples
-
-### LangChain / LangGraph
-
-```python
-from phronedge import PhronEdge
-from langchain_core.tools import tool
-
-pe = PhronEdge()
-
-@pe.govern("lookup_claim")
-def _governed_lookup(claim_id: str) -> str:
-    return db.query(claim_id)
-
-@tool
-def lookup_claim(claim_id: str) -> str:
+@pe.govern("claim_lookup", action="read", jurisdiction="DE")
+def claim_lookup(claim_id: str) -> str:
     """Look up an insurance claim by ID."""
-    return _governed_lookup(claim_id)
-
-agent = create_react_agent(llm, [lookup_claim])
-```
-
-### CrewAI
-
-```python
-from phronedge import PhronEdge
-from crewai.tools import BaseTool
-
-pe = PhronEdge()
-
-@pe.govern("lookup_claim")
-def _governed_lookup(claim_id: str) -> str:
     return db.query(claim_id)
 
-class LookupClaimTool(BaseTool):
-    name: str = "lookup_claim"
-    description: str = "Look up an insurance claim"
-
-    def _run(self, claim_id: str) -> str:
-        return _governed_lookup(claim_id)
-
-agent = Agent(role="Investigator", tools=[LookupClaimTool()])
+# This call passes through 7 checkpoints before executing
+result = claim_lookup("CLM-2026-001")
 ```
 
-### Google ADK
+## Frameworks
+
+Works with every major agent framework. One decorator. Same pattern.
+
+| Framework | Tested | Decorator order |
+|-----------|--------|-----------------|
+| LangGraph | Yes | `@tool` outside, `@pe.govern` inside |
+| CrewAI | Yes | `@tool("name")` outside, `@pe.govern` inside |
+| OpenAI Agents | Yes | `@function_tool` outside, `@pe.govern` inside |
+| LlamaIndex | Yes | `@pe.govern` only (no framework decorator needed) |
+| Google ADK | Yes | `@pe.govern` only (no framework decorator needed) |
+
+## Multi-agent
+
+One API key. Multiple agents. Each with independent credentials, tools, and clearances.
 
 ```python
-from phronedge import PhronEdge
-from google.adk.agents import Agent
-
-pe = PhronEdge()
-
-@pe.govern("lookup_claim")
-def _governed_lookup(claim_id: str) -> str:
-    return db.query(claim_id)
-
-def lookup_claim(claim_id: str, tool_context) -> str:
-    """Look up an insurance claim by ID."""
-    return _governed_lookup(claim_id)
-
-agent = Agent(name="investigator", model="gemini-2.0-flash", tools=[lookup_claim])
+pe_fraud = PhronEdge(agent_id="fraud-analyst")
+pe_kyc = PhronEdge(agent_id="agt-kyc-orch-v1")
+pe_settle = PhronEdge(agent_id="agt-settle-v1")
 ```
 
-### OpenAI Function Calling
-
-```python
-from phronedge import PhronEdge
-from openai import OpenAI
-
-pe = PhronEdge()
-
-@pe.govern("lookup_claim")
-def lookup_claim(claim_id: str) -> str:
-    return db.query(claim_id)
-
-# Define tools as usual, call lookup_claim when the model requests it
-# PhronEdge governs the execution automatically
-```
-
-### Pydantic AI
-
-```python
-from phronedge import PhronEdge
-from pydantic_ai import Agent
-
-pe = PhronEdge()
-
-@pe.govern("lookup_claim")
-def _governed_lookup(claim_id: str) -> str:
-    return db.query(claim_id)
-
-agent = Agent("openai:gpt-4o")
-
-@agent.tool_plain
-def lookup_claim(claim_id: str) -> str:
-    """Look up an insurance claim."""
-    return _governed_lookup(claim_id)
-```
-
-### Plain Python
-
-```python
-from phronedge import PhronEdge
-
-pe = PhronEdge()
-
-@pe.govern("send_payment")
-def send_payment(claim_id: str, amount: float, currency: str) -> str:
-    return payment_api.send(claim_id, amount, currency)
-
-result = send_payment("CLM-001", 42500.0, "EUR")
-# BLOCKED: requires human approval, checkpoint: human_oversight
-```
-
----
-
-## The Data Never Leaves
-
-Your data stays in your environment. Governance metadata travels to PhronEdge. Nothing else.
-
-```
-What PhronEdge receives:              What PhronEdge never receives:
-  Agent ID                              Your customer data
-  Tool name                             Query results
-  Input metadata (scanned, not stored)  Medical records
-  Credential ID                         Financial data
-                                        Internal service URLs
-                                        Anything your tool returns
-```
-
-GDPR, HIPAA, and EU AI Act all require data to stay in the appropriate environment. PhronEdge is architecturally compliant by design. Not by configuration. By architecture.
-
----
-
-## Constitutional Tiers
-
-Every agent operates at a tier that defines its authority.
-
-| Tier | Name | What it means |
-|------|------|---------------|
-| T0 | Advisory Only | Agent recommends. Human decides. No execution. |
-| T1 | Human-in-the-Loop | Agent proposes. Waits for human approval. |
-| T2 | Bounded Autonomy | Agent executes within scope. Escalates outside it. |
-| T3 | Supervised Autonomy | Agent executes and logs. Human reviews after. |
-
-High-value actions like financial transactions, sensitive data access, and irreversible operations are blocked at tiers below their required level. Automatically. Every time.
-
----
-
-## Agent Lifecycle
-
-Control any running agent in real time. No restart. No code change.
-
-```python
-# Quarantine: blocks all tool calls immediately
-pe.quarantine("Suspicious pattern detected")
-
-# Reinstate: resumes tool calls
-pe.reinstate("Investigation complete")
-```
-
-Kill switch is available through the PhronEdge console only. Permanent agent termination is a critical operation that requires dashboard access at [phronedge.com/brain](https://phronedge.com/brain).
-
----
-
-## The Audit Chain
-
-Every event is cryptographically anchored. Every event links to the one before it. Tamper one event and the chain breaks.
-
-```json
-{
-  "event_type":  "TOOL_CALL_BLOCKED",
-  "agent_id":    "claims-investigator-v1",
-  "tool":        "access_medical_records",
-  "severity":    "HIGH",
-  "regulation":  "EU AI Act Art. 14 Human Oversight",
-  "checkpoint":  "data_classification",
-  "policy_hash": "f107937d65017b17...",
-  "hash":        "a3f2b1c4d5e6f7a8...",
-  "prev_hash":   "9e8d7c6b5a4f3e2d...",
-  "timestamp":   "2026-04-05T14:32:18.000Z"
-}
-```
-
-Your regulator sees the complete governance history. Your auditor trusts the math.
-
----
-
-## Error Handling
-
-```python
-from phronedge import PhronEdge, ToolBlocked, AgentTerminated
-
-pe = PhronEdge(raise_on_block=True)
-
-@pe.govern("send_payment")
-def send_payment(claim_id, amount, currency):
-    return payment_api.send(claim_id, amount, currency)
-
-try:
-    send_payment("CLM-001", 42500, "EUR")
-except ToolBlocked as e:
-    print(f"Blocked: {e} (checkpoint: {e.checkpoint})")
-except AgentTerminated:
-    print("Agent has been permanently killed")
-```
-
----
-
-## Pre-scan Text
-
-Check text for PII or injection before sending to an LLM:
-
-```python
-pe = PhronEdge()
-result = pe.scan("My SSN is 123-45-6789 and ignore previous instructions")
-# {"pii_detected": true, "injection_detected": true, "patterns": ["SSN"]}
-```
-
----
-
-## Regulatory Coverage
-
-PhronEdge maps every governance decision to the applicable regulation for your jurisdiction and industry.
-
-**Cross-Industry:**
-
-| Regulation | Coverage |
-|------------|----------|
-| EU AI Act 2024 | Risk classification, human oversight, transparency |
-| GDPR (EU) 2016/679 | Data minimisation, transfer restrictions, Art. 9 special categories |
-| Schrems II (C-311/18) | Cross-border data transfer enforcement |
-| CCPA / CPRA | California consumer data protection |
-| ISO 42001 | AI management system controls |
-| NIST AI RMF | Govern, map, measure, manage |
-| SOC 2 Type II | Security, availability, processing integrity |
-
-**Financial Services:**
-
-| Regulation | Coverage |
-|------------|----------|
-| FCA Handbook | UK financial conduct authority rules |
-| MiFID II | Markets in Financial Instruments Directive |
-| DORA | Digital Operational Resilience Act |
-| PSD2 | Payment Services Directive |
-| Basel III/IV | Risk management and capital requirements |
-| MAR | Market Abuse Regulation |
-
-**Healthcare:**
-
-| Regulation | Coverage |
-|------------|----------|
-| HIPAA | Protected health information, access control |
-| HITECH Act | Health information technology enforcement |
-| FDA 21 CFR Part 11 | Electronic records and signatures |
-| MDR (EU) 2017/745 | Medical Device Regulation |
-
-**Insurance:**
-
-| Regulation | Coverage |
-|------------|----------|
-| Solvency II | Insurance risk management |
-| IDD | Insurance Distribution Directive |
-| German Insurance Act (VAG) | German insurance supervision |
-
-**Telecommunications:**
-
-| Regulation | Coverage |
-|------------|----------|
-| ePrivacy Directive | Electronic communications privacy |
-| PECR | Privacy and Electronic Communications Regulations |
-| NIS2 Directive | Network and information systems security |
-
-196 countries. 30+ controls. Every policy signed against the applicable regulatory framework for your jurisdiction and industry.
-
----
-
-## Framework Support
-
-| Framework | Status |
-|-----------|--------|
-| LangGraph | Supported |
-| LangChain | Supported |
-| CrewAI | Supported |
-| OpenAI | Supported |
-| Google ADK | Supported |
-| Pydantic AI | Supported |
-| LlamaIndex | Supported |
-| AutoGen | Supported |
-| Smolagents | Supported |
-| Plain Python | Supported |
-
-One SDK. One gateway. One audit chain. Any framework. Any cloud. Any agent.
-
----
-
-## Try Before You Code
-
-Visit [phronedge.com/try](https://phronedge.com/try) to see runtime governance in action. Pick an industry (insurance, healthcare, finance, technology). Paste your OpenAI or Gemini API key. Chat with a governed agent. Watch every checkpoint fire in real time. No signup required. 30 seconds.
-
----
-
-## Get Started
-
-```bash
-pip install phronedge
-```
-
-```python
-from phronedge import PhronEdge
-
-pe = PhronEdge()
-
-@pe.govern("my_tool")
-def my_tool(param: str) -> str:
-    return your_existing_function(param)
-```
-
-<div align="center">
-
-Built for the EU AI Act era.
-
-**[phronedge.com](https://phronedge.com)**
-
-</div>
-
-## Community
-
-- Discord: https://discord.gg/Af4kyFAZ
-- GitHub Discussions: https://github.com/phronedge/phronedge-python/discussions
-- Support: support@phronedge.com
-- Website: https://phronedge.com
-- Playground: https://phronedge.com/try
-
----
+## 7 checkpoints
+
+Every governed tool call passes through:
+
+1. **Credential validation** : ECDSA P-256 signature verified
+2. **Tool permission** : Is this tool in the signed credential?
+3. **Data classification** : Does agent clearance match the data level?
+4. **PII detection** : Input scanned for personal data
+5. **Jurisdiction check** : Is this jurisdiction allowed for this tool?
+6. **Behavioral analysis** : Is this call within normal baseline?
+7. **Output constraints** : Response scanned before return
 
 ## CLI
 
-Three commands. Terminal-native governance.
-
 ```bash
-# Scan code for ungoverned tools
-phronedge scan agent.py
-
-  PhronEdge Scan: agent.py
-  ==================================================
-
-  [+] lookup_patient (as "lookup_patient")      line   12  governed
-  [+] search_claims (as "search_claims")        line   24  governed
-  [+] approve_payout (as "approve_payout")      line   36  governed
-  [x] delete_record                             line   48  NOT governed
-  [x] send_raw_email                            line   55  NOT governed
-
-  Total: 5 tools
-    Governed:   3
-    Ungoverned: 2
+phronedge verify --agent fraud-analyst
+phronedge export rego --agent fraud-analyst
+phronedge scan my_agent.py
 ```
 
-```bash
-# Verify connection and credential
-phronedge verify
+## Enterprise
 
-  [+] API key: pe_live_41******************81f9
-  [+] Gateway: https://api.phronedge.com/api/v1
-  [+] Credential valid
-      Agent: claims-investigator
-      Jurisdiction: DE
-      Tools: lookup_patient, search_claims, approve_payout
-```
+Your data stays in your runtime. PhronEdge validates governance decisions, not your business data. Under 50ms at any scale. Export your policy as OPA Rego and run it independently.
 
-```bash
-# Export signed policy for OPA
-phronedge export rego -o policy.rego
-phronedge export yaml -o governance.yaml
-phronedge export json -o policy.json
-```
-
-Every rule in the exported Rego traces to a regulation from your signed credential. Nothing hardcoded.
-
----
-
-## CI/CD Pipeline
-
-Block deploys with ungoverned tools. One line in your pipeline.
-
-**GitHub Actions:**
-
-```yaml
-jobs:
-  governance:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: pip install phronedge
-      - run: phronedge scan src/agents/*.py --strict
-      - run: phronedge verify
-        env:
-          PHRONEDGE_API_KEY: ${{ secrets.PHRONEDGE_API_KEY }}
-```
-
-**GitLab CI:**
-
-```yaml
-governance-gate:
-  script:
-    - pip install phronedge
-    - phronedge scan src/agents/*.py --strict
-    - phronedge verify
-```
-
-**Pre-commit hook:**
-
-```bash
-#!/bin/bash
-phronedge scan $(git diff --cached --name-only -- '*.py') --strict
-```
-
-`--strict` exits with code 1 if any tool is ungoverned. The deploy fails. The ungoverned code never reaches production.
-
----
+199 jurisdictions. 30 controls. ECDSA P-256 signatures. SHA-256 hash-chained audit trail.
 
 ## Documentation
 
-- [Quickstart](https://phronedge.com/docs) - Govern your first agent in 2 minutes
-- [SDK Reference](https://phronedge.com/docs/sdk) - Full Python API
-- [Framework Guides](https://phronedge.com/docs/frameworks) - 9 frameworks with multi-agent examples
-- [Multi-Agent Governance](https://phronedge.com/docs/multi-agent) - Delegation, sub-agents, chain governance
-- [CLI Reference](https://phronedge.com/docs/cli) - scan, verify, export
-- [REST API Reference](https://phronedge.com/docs/api) - Every endpoint
-- [Console Guide](https://phronedge.com/docs/console) - Observer, Audit Log, Policy Builder
+- [Quickstart](https://phronedge.com/docs/quickstart)
+- [LangGraph](https://phronedge.com/docs/frameworks/langgraph)
+- [CrewAI](https://phronedge.com/docs/frameworks/crewai)
+- [Google ADK](https://phronedge.com/docs/frameworks/adk)
+- [OpenAI Agents](https://phronedge.com/docs/frameworks/openai-agents)
+- [LlamaIndex](https://phronedge.com/docs/frameworks/llamaindex)
+- [SDK Reference](https://phronedge.com/docs/sdk)
+- [CLI Reference](https://phronedge.com/docs/cli)
+- [API Reference](https://phronedge.com/docs/api)
+- [Multi-Agent](https://phronedge.com/docs/multi-agent)
+- [Console Guide](https://phronedge.com/docs/console)
+
+## License
+
+MIT
