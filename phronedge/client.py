@@ -28,14 +28,18 @@ class GovernanceError(Exception):
     """Base PhronEdge governance error."""
     def __init__(self, message, checkpoint="", regulation=""):
         super().__init__(message)
+        self.reason = message
         self.checkpoint = checkpoint
         self.regulation = regulation
+        self.blocked = False
+        self.retry = False
 
 
 class ToolBlocked(GovernanceError):
     """Tool call blocked. Temporary  - may be retried."""
     def __init__(self, message, checkpoint="", regulation="", retry=True):
         super().__init__(message, checkpoint, regulation)
+        self.blocked = True
         self.retry = retry
 
 
@@ -43,6 +47,7 @@ class AgentTerminated(GovernanceError):
     """Agent permanently killed."""
     def __init__(self, message="Agent has been permanently terminated"):
         super().__init__(message)
+        self.blocked = True
         self.retry = False
 
 
@@ -76,16 +81,22 @@ class PhronEdge:
         self._session.headers.update({
             "Content-Type": "application/json",
             "X-PhronEdge-Key": self.api_key,
-            "User-Agent": "phronedge-sdk/1.0.0",
+            "User-Agent": "phronedge-sdk/2.4.6",
         })
 
         # Credential cache
         self._credential = None
         self._credential_ts = 0
-        self._agent_id = agent_id
+        self._agent_id = agent_id or os.getenv("PHRONEDGE_AGENT_ID", "")
 
         if not self.api_key:
             logger.warning("No PHRONEDGE_API_KEY set. Set it in your .env or pass api_key= to PhronEdge().")
+
+        if not self._agent_id:
+            logger.warning(
+                "No agent_id set. Set PHRONEDGE_AGENT_ID env var or pass agent_id= to PhronEdge(). "
+                "Without it, the first available credential is used — unreliable with multiple agents."
+            )
 
     def govern(self, tool_name=None, action='execute', jurisdiction=None, mcp=None, delegates=None):
         """
@@ -138,21 +149,24 @@ class PhronEdge:
             detail = self._parse_detail(r)
             reason = detail.get("reason", "Blocked by governance")
             checkpoint = detail.get("checkpoint", "")
+            regulation = detail.get("regulation", "")
             error = detail.get("error", "")
+            retry = "quarantined" not in error
 
             if "killed" in error or "terminated" in error:
                 raise AgentTerminated(reason)
 
             if self.raise_on_block:
-                raise ToolBlocked(reason, checkpoint)
+                raise ToolBlocked(reason, checkpoint=checkpoint, regulation=regulation, retry=retry)
 
-            return json.dumps({
+            return {
                 "blocked": True,
                 "reason": reason,
                 "checkpoint": checkpoint,
-                "retry": "quarantined" not in error,
+                "regulation": regulation,
+                "retry": retry,
                 "message": "Tool call blocked by PhronEdge governance.",
-            })
+            }
 
         elif r.status_code == 401:
             raise GovernanceError("Invalid API key. Check your PHRONEDGE_API_KEY.")

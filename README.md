@@ -61,16 +61,72 @@ Every governed tool call passes through:
 ## CLI
 
 ```bash
+# ─────────────────────────────────────────────
+# SETUP (prereqs)
+# ─────────────────────────────────────────────
+pip install phronedge
+export PHRONEDGE_API_KEY=pe_live_your_key_here
+# Optional: override for enterprise / local
+# export PHRONEDGE_GATEWAY_URL=http://localhost:8080/api/v1
+
+# ─────────────────────────────────────────────
+# PRE-FLIGHT (existing in 2.3.0)
+# ─────────────────────────────────────────────
+phronedge verify
 phronedge verify --agent fraud-analyst
-phronedge export rego --agent fraud-analyst
+
+# ─────────────────────────────────────────────
+# POLICY LIFECYCLE (new in 2.4.0)
+# ─────────────────────────────────────────────
+phronedge policy build policy.yaml
+phronedge policy deploy policy.yaml
+phronedge policy status
+
+# ─────────────────────────────────────────────
+# EXPORT (existing in 2.3.0)
+# ─────────────────────────────────────────────
+phronedge export rego -o policy.rego
+phronedge export yaml -o gov.yaml
+phronedge export json -o policy.json
+# With agent scope
+phronedge export rego --agent fraud-analyst -o fraud.rego
+
+# ─────────────────────────────────────────────
+# AGENT LIFECYCLE (new in 2.4.0)
+# ─────────────────────────────────────────────
+phronedge agent list
+phronedge agent quarantine fraud-analyst "suspicious behavior detected"
+phronedge agent reinstate fraud-analyst "investigation cleared"
+
+# ─────────────────────────────────────────────
+# CHAIN & AUDIT (new in 2.4.0)
+# ─────────────────────────────────────────────
+phronedge chain verify
+phronedge chain events --limit 20
+
+# ─────────────────────────────────────────────
+# CODE QUALITY (existing in 2.3.0)
+# ─────────────────────────────────────────────
 phronedge scan my_agent.py
+phronedge scan my_agent.py --strict
 ```
 
 ## Enterprise
 
-Your data stays in your runtime. PhronEdge validates governance decisions, not your business data. Under 50ms at any scale. Export your policy as OPA Rego and run it independently.
+Deploy PhronEdge on your own infrastructure. Same SDK. Same `@pe.govern()`. One env var change.
 
-199 jurisdictions. 30 controls. ECDSA P-256 signatures. SHA-256 hash-chained audit trail.
+```bash
+# SaaS (default)
+export PHRONEDGE_API_KEY=pe_live_xxx
+
+# Enterprise (your k8s, your KMS, your Postgres)
+export PHRONEDGE_API_KEY=pe_live_xxx
+export PHRONEDGE_GATEWAY_URL=https://governance.internal.bank.com/api/v1
+```
+
+Per-tenant ECDSA P-256 signing keys. Independent verification via public key endpoint. Multi-cloud KMS (AWS, GCP, Azure). Storage abstraction (Firestore or Postgres). Helm chart for k8s. Docker, ECS, Cloud Run. Your developer's code doesn't change.
+
+196 jurisdictions. 30 controls. SHA-256 hash-chained audit trail. Tamper-proof. Mathematically verifiable.
 
 ## Documentation
 
