@@ -230,6 +230,7 @@ policy = {
         },
     ],
 }
+policy["deploy"] = True
 
 r = requests.post(f"{API}/governance/build", headers=H, json=policy, timeout=30)
 result = r.json()

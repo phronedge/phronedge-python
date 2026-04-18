@@ -1,173 +1,140 @@
 # Console Guide
 
-The PhronEdge console at [phronedge.com/brain](https://phronedge.com/brain) is where you sign policies, monitor agents, export credentials, and manage your tenant.
+The PhronEdge Console at [phronedge.com/brain](https://phronedge.com/brain) is where CISOs, compliance officers, and platform engineers manage AI governance. Developers run the CLI and SDK. The Console is the governance surface.
+
+This guide describes the Console's structure, the primary workflows, and which surface (SDK, CLI, or Console) is appropriate for each operation.
+
+## The Console at a glance
+
+The Console has five primary views plus a Settings panel.
+
+| View | Audience | Purpose |
+|------|----------|---------|
+| Policy Builder | Platform team, CISO | Define and sign governance policies |
+| Architecture | Architecture review, CISO | Visualize the signed governance structure |
+| Observer | CISO, SOC team | Real-time monitoring, agent lifecycle |
+| Audit Log | Compliance, auditors | Searchable event history with regulatory citations |
+| API Keys | Platform team | Provision SDK credentials |
 
 ## Policy Builder
 
-The Policy Builder is where you define your organization, agents, and tools.
+A step-by-step form that produces a signed constitutional policy. No code required.
 
-### Starting a policy
+The Builder walks through three logical steps:
 
-1. Go to [phronedge.com/brain](https://phronedge.com/brain) and sign in
-2. Click **Build Policy** or select a template
-3. Fill in your organization details
+**Organization.** Your regulatory context. HQ jurisdiction, industry, data types handled, data residency, deployment jurisdictions. These inputs drive the Brain's framework resolution.
 
-### Templates
+**Agents and Tools.** Every AI agent you deploy, its tier, its data clearance, its tool access, its behavioral baseline, its token budget. Every tool, its data classification, minimum tier, allowed jurisdictions, and permissions.
 
-The Policy Builder includes pre-built templates for common industries:
+**Organization Policy.** Tenant-wide ceiling. Allowed models, global deny patterns, auto-quarantine triggers, escalation rules, threat detection settings.
 
-- **Financial Services** (KYC, AML, fraud detection)
-- **Healthcare** (claims processing, patient data)
-- **Insurance** (claims investigation, risk assessment)
-- **Technology** (data processing, API governance)
+Click **Sign and Deploy**. The Brain evaluates against applicable regulatory frameworks. Compliant policies are signed, credentials are issued, events are anchored. Policies with gaps return a remediation report.
 
-Each template pre-fills the organization settings, suggested agents, and tools with appropriate data classifications and jurisdictions.
+The Builder has two action modes: **Build** (signs for review, no credentials issued) and **Sign and Deploy** (issues credentials). Build is for pre-approval review. Sign and Deploy is the production commitment.
 
-### Defining agents
+## Architecture View
 
-For each agent, specify:
+Renders the signed policy as an interactive governance graph. Organization at top. Agents below. Orchestrators above their sub-agents with parent-child edges. Tools below the agents that use them.
 
-- **Agent ID**: Unique identifier like `fraud-analyst` or `agt-kyc-v1`
-- **Purpose**: What this agent does
-- **Model**: LLM model it uses
-- **Tier**: T1 (sub-agent), T2 (standalone), or T3 (orchestrator)
-- **Data classifications**: What data levels it can access
-- **Tools**: Which tools it can use
-- **Jurisdictions**: Where it operates
+Click any node to see its full configuration.
 
-### Defining tools
+Every signed policy is viewable as:
 
-For each tool, specify:
+- **JSON** - Machine-readable artifact
+- **YAML** - Human-readable for version control
+- **OPA Rego** - Complete policy bundle with denial reasons and regulation citations
 
-- **Tool ID**: Must match the `@pe.govern("tool_id")` in your code
-- **Description**: What this tool does
-- **Permissions**: `read`, `write`, `delete`, `execute`
-- **Jurisdictions**: Where this tool can be called from
-- **Data classification**: Data level of this tool's output
-- **Deny patterns**: Input patterns to block (SQL injection, etc.)
-- **Rate limit**: Maximum calls per day
-
-### Signing
-
-Click **Build and Deploy** to sign the policy. The gateway:
-
-1. Maps your organization to 199 jurisdictions
-2. Identifies applicable regulatory frameworks
-3. Evaluates 30 controls against your configuration
-4. Signs the credential with ECDSA P-256
-5. Anchors the policy hash to the audit chain
-6. Issues credentials for each agent
-
-After signing, you auto-navigate to the Architecture view.
-
-## Architecture view
-
-The Architecture view shows your signed policy in three formats:
-
-### JSON tab
-
-The raw signed credential as JSON. Includes the ECDSA signature, policy hash, permitted tools, frameworks, and all governance constraints.
-
-### YAML tab
-
-The same credential as YAML. Useful for configuration management and GitOps workflows.
-
-### OPA tab
-
-A complete OPA Rego policy bundle generated from your signed credential. Includes:
-
-- Default deny rule
-- Agent authorization
-- Tool permissions with per-tool jurisdiction enforcement
-- Model allowlist
-- Data classification checks
-- PII detection patterns
-- Jurisdiction validation with cross-border transfer rules
-- Behavioral baseline limits
-- Delegation rules
-- Output constraints
-- Denial reason mapping
-- Policy metadata with regulatory citations
-
-Copy this file and drop it into any OPA runtime:
-
-```bash
-cp phronedge_policy.rego /path/to/opa/policies/
-opa run --server --bundle /path/to/opa/policies/
-```
-
-### DAG graph
-
-A visual directed acyclic graph showing your agents, tools, and delegation relationships.
+Export artifacts directly to your version control, object storage, or custom webhook from the Export action.
 
 ## Observer
 
-The Observer is the real-time audit trail for your tenant. Every tool call, whether allowed or blocked, appears here.
+Real-time governance monitoring. The operational surface for your SOC team.
 
-### Event types
+**Top metrics:** Requests allowed, requests blocked, PII detections, injection attempts, tamper events, lifecycle events. Updated live.
 
-| Event | Description |
-|-------|-------------|
-| `TOOL_CALL_ALLOWED` | Tool call passed all 7 checkpoints |
-| `TOOL_CALL_BLOCKED` | Tool call blocked at a checkpoint |
-| `PII_INPUT_DETECTED` | PII found in tool input |
-| `PII_OUTPUT_DETECTED` | PII found in tool output |
-| `POLICY_SIGNED` | New policy signed |
-| `CREDENTIAL_ISSUED` | New credential issued |
-| `AGENT_QUARANTINED` | Agent quarantined |
-| `AGENT_REINSTATED` | Agent reinstated |
-| `AGENT_KILLED` | Agent permanently terminated |
-| `BEHAVIORAL_ANOMALY` | Tool call rate exceeded baseline |
-| `VAULT_TAMPER_DETECTED` | Credential tampering detected |
-| `VAULT_CREDENTIAL_RESTORED` | Credential restored after tamper |
-| `DELEGATION_BLOCKED` | Unauthorized delegation attempt |
+**Events chart:** Time-series of allowed vs blocked activity.
 
-### Event details
+**Agent fleet:** Every agent as a card showing state (Active, Quarantined, Killed), tool count, recent activity, and action buttons. Sub-agents nest inside their orchestrator's card.
 
-Each event shows:
+**Activity feed:** Real-time scrolling event list with regulation citations. Click for full event details including SHA-256 hash and chain linkage.
 
-- **Agent ID**: Which agent made the call
-- **Tool**: Which tool was called
-- **Action**: What action was attempted
-- **Checkpoint**: Which checkpoint allowed or blocked
-- **Regulation**: Which regulation applies
-- **Hash**: SHA-256 hash of this event
-- **Previous hash**: Hash of the previous event (chain integrity)
-- **Timestamp**: When the event occurred
+**System status:** Live status of each of the five powers (Observer, Judge, Enforcer, Brain, Anchor).
 
-### Chain integrity
+**Constitutional Laws panel:** The four principles that govern PhronEdge's enforcement decisions.
 
-Every event is SHA-256 hashed and chained to the previous event. If any event is tampered with, the chain breaks and `VAULT_TAMPER_DETECTED` is logged. The Observer shows chain integrity status.
+## Audit Log
 
-## API Keys
+Searchable, filterable history of every governance event. Separate from the live feed.
 
-Manage your tenant API keys:
+Filter by agent, event type, severity, category, or date range. Export the filtered view as a signed audit pack.
 
-- **Create Key**: Generate a new key. The full key is shown once
-- **List Keys**: See all keys with prefixes, labels, and usage counts
-- **Revoke Key**: Immediately revoke a key. All requests using it are rejected
-- **Delete Key**: Permanently remove a key from the system
+Every event shows its regulation citation, the checkpoint that triggered it, and its place in the cryptographic chain.
 
-Keys are tenant-wide. One key works for all agents under your tenant.
+## Settings
 
-## Agent lifecycle
+Tenant administration. Profile, team and permissions, security, integration, and the Danger Zone.
 
-### Quarantine
+**Team and Permissions** supports role-based access with separation between policy signing, agent lifecycle, audit review, and tenant administration.
 
-Quarantine an agent from the console. All tool calls from that agent are immediately blocked. No code change or restart needed.
+**Security** shows the active signing key and provides key rotation. Key rotation is Console-only.
 
-### Reinstate
+**Danger Zone** handles tenant deletion with multi-step confirmation.
 
-Reinstate a quarantined agent. Tool calls resume immediately.
+## Which surface for which operation
 
-### Kill
+The product has three surfaces: SDK (runtime), CLI (developer and CI/CD), Console (governance). Each is designed for a specific audience and a specific set of operations.
 
-Permanently terminate an agent. This is irreversible. The agent credential is revoked and cannot be restored.
+| Operation | Surface | Why |
+|-----------|---------|-----|
+| Runtime tool governance | SDK | Enforcement happens at every call |
+| Policy build in CI | CLI | Scriptable, version-controllable |
+| Policy signing and deployment | CLI or Console | Either is authoritative |
+| Policy review and visualization | Console | Visual architecture graph |
+| Real-time monitoring | Console | Live telemetry, agent cards |
+| Agent quarantine | CLI, SDK, Console | Reversible, multiple paths |
+| Kill switch | Console only | Permanent, requires authenticated session |
+| Signing key rotation | Console only | Privileged, multi-step confirmation |
+| Team management | Console only | Tenant administration |
+| Chain verification | CLI or Console | Same cryptographic check |
+| Audit export | CLI or Console | Signed artifacts, same format |
 
-## Danger Zone
+**Pattern:** Reversible operations are available in all three surfaces. Privileged or irreversible operations are Console-only to enforce authenticated session context.
 
-Account management:
+## Dual-track workflows
 
-- **Export data**: Download all your tenant data (GDPR Art. 20)
-- **Close account**: Delete your account and all associated data (GDPR Art. 17). Requires typed confirmation. 30-day grace period before permanent deletion
-- **Cancel closure**: Cancel a pending account closure during the grace period
+Common operations have both a developer path and a CISO path.
+
+**Signing a policy.** Developer runs `phronedge policy deploy policy.yaml` in CI. CISO walks through the Policy Builder and clicks Sign and Deploy. Both produce the same signed artifact and the same `POLICY_SIGNED` event.
+
+**Verifying the chain.** Developer runs `phronedge chain verify`. CISO clicks the Verify hash chain button in the Observer. Same cryptographic check. Same result.
+
+**Quarantining an agent.** Developer calls `pe.quarantine()` or runs `phronedge agent quarantine`. CISO clicks the Quarantine button on the agent card. Same effect.
+
+**Exporting for audit.** Developer runs `phronedge export rego`. CISO opens the Architecture view and copies the OPA tab. Same Rego bundle with the same regulatory citations.
+
+This dual-track design is deliberate. It ensures that every operation with enterprise significance is accessible to the person responsible for the decision, whether that person works in code or through a browser.
+
+## Observer and human oversight
+
+Regulated AI deployments require demonstrable human oversight. The Observer is the oversight surface.
+
+The Observer provides what regulators expect to see:
+
+- Real-time visibility into agent behavior
+- Immediate intervention controls (quarantine, reinstate, kill)
+- Cryptographic proof that past events have not been modified
+- Regulatory citation on every blocked event
+
+Your regulator asking "how does a human intervene" points to the Observer and its agent lifecycle controls. Your compliance team's evidence of effective oversight is the chain of authenticated Console actions, all signed and anchored.
+
+## Getting full detail
+
+The Policy Builder field reference, the Settings admin guide, the complete operator playbook for each Console action, and the full SDK-CLI-Console capability matrix are available to registered customers.
+
+## Next steps
+
+- [Quickstart](/docs/quickstart). Two-minute end-to-end
+- [Compliance matrix](/docs/compliance-matrix). Which regulation each Console feature satisfies
+- [Signing and verification](/docs/signing-verification). What the Console is signing on your behalf
+- [Threat model](/docs/threat-model). The trust model behind the Console
+- [CLI reference](/docs/cli). Developer-side equivalents

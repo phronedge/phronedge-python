@@ -192,7 +192,7 @@ def restricted_tool(data: str) -> str:
 # The LLM can then try a different approach or report the limitation.
 ```
 
-**With raise_on_block=True:** The tool raises a `GovernanceError`. LangGraph catches it as a tool error.
+**With raise_on_block=True:** The tool raises a `ToolBlocked`. LangGraph catches it as a tool error.
 
 ```python
 pe = PhronEdge(agent_id="claims-investigator", raise_on_block=True)
@@ -203,7 +203,7 @@ def restricted_tool(data: str) -> str:
     """Tool that requires write permission."""
     return process(data)
 
-# If blocked, raises GovernanceError. LangGraph handles it as a tool error.
+# If blocked, raises ToolBlocked. LangGraph handles it as a tool error.
 ```
 
 ## Full runnable example
@@ -270,6 +270,7 @@ policy = {
         },
     ],
 }
+policy["deploy"] = True
 
 r = requests.post(f"{API}/governance/build", headers=H, json=policy, timeout=30)
 result = r.json()
