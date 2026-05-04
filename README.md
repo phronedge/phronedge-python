@@ -28,14 +28,14 @@ result = claim_lookup("CLM-2026-001")
 
 Works with every major agent framework. One decorator. Same pattern.
 
-| Framework | Tested | Decorator order |
-|-----------|--------|-----------------|
-| LangGraph | Yes | `@tool` outside, `@pe.govern` inside |
-| CrewAI | Yes | `@tool("name")` outside, `@pe.govern` inside |
-| OpenAI Agents | Yes | `@function_tool` outside, `@pe.govern` inside |
-| LlamaIndex | Yes | `@pe.govern` only (no framework decorator needed) |
-| Google ADK | Yes | `@pe.govern` only (no framework decorator needed) |
-| AutoGen | Yes | `@pe.govern` only (no framework decorator needed) |
+| Framework | Decorator order |
+|-----------|-----------------|
+| LangGraph | `@tool` outside, `@pe.govern` inside |
+| CrewAI | `@tool("name")` outside, `@pe.govern` inside |
+| OpenAI Agents | `@function_tool` outside, `@pe.govern` inside |
+| LlamaIndex | `@pe.govern` only (no framework decorator needed) |
+| Google ADK | `@pe.govern` only (no framework decorator needed) |
+| AutoGen | `@pe.govern` only (no framework decorator needed) |
 
 ## Multi-agent
 
@@ -63,7 +63,7 @@ Every governed tool call passes through:
 
 ```bash
 # ─────────────────────────────────────────────
-# SETUP (prereqs)
+# SETUP
 # ─────────────────────────────────────────────
 pip install phronedge
 export PHRONEDGE_API_KEY=pe_live_your_key_here
@@ -71,20 +71,20 @@ export PHRONEDGE_API_KEY=pe_live_your_key_here
 # export PHRONEDGE_GATEWAY_URL=https://governance.internal.yourcompany.com/api/v1
 
 # ─────────────────────────────────────────────
-# PRE-FLIGHT (existing in 2.3.0)
+# PRE-FLIGHT
 # ─────────────────────────────────────────────
 phronedge verify
 phronedge verify --agent fraud-analyst
 
 # ─────────────────────────────────────────────
-# POLICY LIFECYCLE (new in 2.4.0)
+# POLICY LIFECYCLE
 # ─────────────────────────────────────────────
 phronedge policy build policy.yaml
 phronedge policy deploy policy.yaml
 phronedge policy status
 
 # ─────────────────────────────────────────────
-# EXPORT (existing in 2.3.0)
+# EXPORT
 # ─────────────────────────────────────────────
 phronedge export rego -o policy.rego
 phronedge export yaml -o gov.yaml
@@ -93,20 +93,20 @@ phronedge export json -o policy.json
 phronedge export rego --agent fraud-analyst -o fraud.rego
 
 # ─────────────────────────────────────────────
-# AGENT LIFECYCLE (new in 2.4.0)
+# AGENT LIFECYCLE
 # ─────────────────────────────────────────────
 phronedge agent list
 phronedge agent quarantine fraud-analyst "suspicious behavior detected"
 phronedge agent reinstate fraud-analyst "investigation cleared"
 
 # ─────────────────────────────────────────────
-# CHAIN & AUDIT (new in 2.4.0)
+# CHAIN & AUDIT
 # ─────────────────────────────────────────────
 phronedge chain verify
 phronedge chain events --limit 20
 
 # ─────────────────────────────────────────────
-# CODE QUALITY (existing in 2.3.0)
+# CODE QUALITY
 # ─────────────────────────────────────────────
 phronedge scan my_agent.py
 phronedge scan my_agent.py --strict
