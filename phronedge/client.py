@@ -210,7 +210,7 @@ class PhronEdge:
         try:
             detail = r.json().get("detail", {})
             return detail if isinstance(detail, dict) else {"reason": str(detail)}
-        except:
+        except Exception:
             return {"reason": r.text[:200]}
 
     # -- Utility methods --
