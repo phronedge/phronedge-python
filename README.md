@@ -67,8 +67,8 @@ Every governed tool call passes through:
 # ─────────────────────────────────────────────
 pip install phronedge
 export PHRONEDGE_API_KEY=pe_live_your_key_here
-# Optional: override for enterprise / local
-# export PHRONEDGE_GATEWAY_URL=http://localhost:8080/api/v1
+# Optional: override for enterprise self-hosted
+# export PHRONEDGE_GATEWAY_URL=https://governance.internal.yourcompany.com/api/v1
 
 # ─────────────────────────────────────────────
 # PRE-FLIGHT (existing in 2.3.0)
