@@ -37,7 +37,7 @@ def _headers(api_key):
     return {
         "X-PhronEdge-Key": api_key,
         "Content-Type": "application/json",
-        "User-Agent": "phronedge-cli/2.4.7",
+        "User-Agent": "phronedge-cli/2.5.0",
     }
 
 
@@ -255,7 +255,7 @@ def cmd_verify(args):
     print()
 
     if not args.agent:
-        # No agent specified — list all agents so user knows what to verify
+        # No agent specified - list all agents so user knows what to verify
         print("No --agent specified. Listing available agents:")
         print()
         try:
@@ -280,7 +280,7 @@ def cmd_verify(args):
             print(f"  [x] Agent list failed: {e}")
         return
 
-    # Specific agent — fetch and verify credential
+    # Specific agent - fetch and verify credential
     print(f"Verifying agent: {args.agent}")
     try:
         r = requests.get(

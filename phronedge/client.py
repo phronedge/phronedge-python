@@ -81,7 +81,7 @@ class PhronEdge:
         self._session.headers.update({
             "Content-Type": "application/json",
             "X-PhronEdge-Key": self.api_key,
-            "User-Agent": "phronedge-sdk/2.4.6",
+            "User-Agent": "phronedge-sdk/2.5.0",
         })
 
         # Credential cache
@@ -95,7 +95,7 @@ class PhronEdge:
         if not self._agent_id:
             logger.warning(
                 "No agent_id set. Set PHRONEDGE_AGENT_ID env var or pass agent_id= to PhronEdge(). "
-                "Without it, the first available credential is used — unreliable with multiple agents."
+                "Without it, the first available credential is used - unreliable with multiple agents."
             )
 
     def govern(self, tool_name=None, action='execute', jurisdiction=None, mcp=None, delegates=None):

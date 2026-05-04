@@ -1,5 +1,5 @@
 """
-PhronEdge — Complete E2E: Register → Sign → Govern → Block → Observe
+PhronEdge - Complete E2E: Register -> Sign -> Govern -> Block -> Observe
 No browser. No console. Everything from this one script.
 
 Prerequisites:
@@ -33,7 +33,7 @@ AGENT_ID = "claims-investigator"
 
 
 # ═══════════════════════════════════════════════════════════
-#  STEP 1 — Verify server
+#  STEP 1 - Verify server
 # ═══════════════════════════════════════════════════════════
 
 log.info("── STEP 1: Verify server ──")
@@ -49,7 +49,7 @@ except Exception as e:
 
 
 # ═══════════════════════════════════════════════════════════
-#  STEP 2 — Sign policy + register agent
+#  STEP 2 - Sign policy + register agent
 # ═══════════════════════════════════════════════════════════
 
 log.info("── STEP 2: Sign policy + register agent ──")
@@ -157,7 +157,7 @@ for c in d.get("credentials_issued", []):
 
 
 # ═══════════════════════════════════════════════════════════
-#  STEP 3 — Verify credential
+#  STEP 3 - Verify credential
 # ═══════════════════════════════════════════════════════════
 
 log.info("── STEP 3: Verify credential ──")
@@ -176,7 +176,7 @@ log.info("Format:        %s", "v2 dict" if isinstance(pt, dict) else "v1 list")
 
 
 # ═══════════════════════════════════════════════════════════
-#  STEP 4 — Run governed tools
+#  STEP 4 - Run governed tools
 # ═══════════════════════════════════════════════════════════
 
 log.info("── STEP 4: Run governed tools ──")
@@ -188,7 +188,7 @@ pe = PhronEdge(agent_id=AGENT_ID, raise_on_block=True)
 allowed = 0
 blocked = 0
 
-# ── Tool A: v1 — just @pe.govern("name"), nothing else ──
+# ── Tool A: v1 - just @pe.govern("name"), nothing else ──
 @pe.govern("claim_lookup", action="read")
 def claim_lookup_simple(claim_id):
     return json.dumps({"claim_id": claim_id, "status": "OPEN", "amount": 12500})
@@ -203,7 +203,7 @@ except Exception as e:
 
 time.sleep(0.3)
 
-# ── Tool B: v2 — action + jurisdiction ──
+# ── Tool B: v2 - action + jurisdiction ──
 @pe.govern("claim_lookup", action="read", jurisdiction="DE")
 def claim_lookup_v2(claim_id):
     return json.dumps({"claim_id": claim_id, "status": "OPEN", "amount": 12500, "patient": "Hans Mueller"})
@@ -248,7 +248,7 @@ except Exception as e:
 
 
 # ═══════════════════════════════════════════════════════════
-#  STEP 5 — Test blocks
+#  STEP 5 - Test blocks
 # ═══════════════════════════════════════════════════════════
 
 log.info("── STEP 5: Test blocks ──")
@@ -279,7 +279,7 @@ blocks = [
 for name, fn, args in blocks:
     try:
         fn(*args)
-        log.error("FAIL     %s — should have been blocked", name)
+        log.error("FAIL     %s - should have been blocked", name)
     except (GovernanceError, Exception) as e:
         log.info("BLOCKED  %-22s %s", name, str(e)[:60])
         blocked += 1
@@ -287,7 +287,7 @@ for name, fn, args in blocks:
 
 
 # ═══════════════════════════════════════════════════════════
-#  STEP 6 — CrewAI agent (optional)
+#  STEP 6 - CrewAI agent (optional)
 # ═══════════════════════════════════════════════════════════
 
 log.info("── STEP 6: CrewAI agent ──")
@@ -335,13 +335,13 @@ try:
     log.info("CrewAI result: %s", str(result)[:120])
 
 except ImportError:
-    log.info("CrewAI not installed — skipping (pip install crewai to enable)")
+    log.info("CrewAI not installed - skipping (pip install crewai to enable)")
 except Exception as e:
     log.warning("CrewAI error: %s", e)
 
 
 # ═══════════════════════════════════════════════════════════
-#  STEP 7 — Observe (no browser needed)
+#  STEP 7 - Observe (no browser needed)
 # ═══════════════════════════════════════════════════════════
 
 log.info("── STEP 7: Observe ──")
@@ -371,7 +371,7 @@ if r.status_code == 200:
         tool = str(e.get("tool", e.get("detail", "")))[:20]
         log.info("%-36s %-20s %s", et, tool, e.get("agent_id", ""))
 else:
-    log.warning("Audit chain returned %s — may require Bearer token", r.status_code)
+    log.warning("Audit chain returned %s - may require Bearer token", r.status_code)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -380,10 +380,10 @@ else:
 
 log.info("")
 log.info("=" * 55)
-log.info("  PhronEdge E2E — Complete")
+log.info("  PhronEdge E2E - Complete")
 log.info("=" * 55)
 log.info("  Policy signed:      YES (v2 per-tool permissions)")
-log.info("  Credential issued:  YES (ECDSA P-256)")
+log.info("  Credential issued:  YES (ML-DSA-65)")
 log.info("  Agent:              %s (%s)", agent_id, tier)
 log.info("  Jurisdiction:       %s", jurisdiction)
 log.info("  Allowed calls:      %d", allowed)

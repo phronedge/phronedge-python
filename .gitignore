@@ -1,5 +1,39 @@
+# Build
 dist/
 build/
 *.egg-info/
+*.egg
+
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
 .eggs/
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docs (generated)
+docs/
+
+# UV
+.python-version
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/

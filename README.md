@@ -35,6 +35,7 @@ Works with every major agent framework. One decorator. Same pattern.
 | OpenAI Agents | Yes | `@function_tool` outside, `@pe.govern` inside |
 | LlamaIndex | Yes | `@pe.govern` only (no framework decorator needed) |
 | Google ADK | Yes | `@pe.govern` only (no framework decorator needed) |
+| AutoGen | Yes | `@pe.govern` only (no framework decorator needed) |
 
 ## Multi-agent
 
@@ -50,7 +51,7 @@ pe_settle = PhronEdge(agent_id="agt-settle-v1")
 
 Every governed tool call passes through:
 
-1. **Credential validation** : ECDSA P-256 signature verified
+1. **Credential validation** : ML-DSA-65 signature verified
 2. **Tool permission** : Is this tool in the signed credential?
 3. **Data classification** : Does agent clearance match the data level?
 4. **PII detection** : Input scanned for personal data
@@ -124,7 +125,7 @@ export PHRONEDGE_API_KEY=pe_live_xxx
 export PHRONEDGE_GATEWAY_URL=https://governance.internal.bank.com/api/v1
 ```
 
-Per-tenant ECDSA P-256 signing keys. Independent verification via public key endpoint. Multi-cloud KMS (AWS, GCP, Azure). Storage abstraction (Firestore or Postgres). Helm chart for k8s. Docker, ECS, Cloud Run. Your developer's code doesn't change.
+Per-tenant ML-DSA-65 signing keys. Independent verification via public key endpoint. Multi-cloud KMS (AWS, GCP, Azure). Storage abstraction (Firestore or Postgres). Helm chart for k8s. Docker, ECS, Cloud Run. Your developer's code doesn't change.
 
 196 jurisdictions. 30 controls. SHA-256 hash-chained audit trail. Tamper-proof. Mathematically verifiable.
 
@@ -136,6 +137,7 @@ Per-tenant ECDSA P-256 signing keys. Independent verification via public key end
 - [Google ADK](https://phronedge.com/docs/frameworks/adk)
 - [OpenAI Agents](https://phronedge.com/docs/frameworks/openai-agents)
 - [LlamaIndex](https://phronedge.com/docs/frameworks/llamaindex)
+- [AutoGen](https://phronedge.com/docs/frameworks/autogen)
 - [SDK Reference](https://phronedge.com/docs/sdk)
 - [CLI Reference](https://phronedge.com/docs/cli)
 - [API Reference](https://phronedge.com/docs/api)
